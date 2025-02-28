@@ -3,7 +3,7 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/coursehub.git
+   git clone https://github.com/mdakashhossain1/cources-nodeJs-express.git
    cd coursehub
    ```
 
@@ -14,9 +14,12 @@
 
 3. Create a `.env` file in the root directory and add your environment variables:
    ```
-   DATABASE_URL=your_database_url
    JWT_SECRET=your_jwt_secret
-   SESSION_SECRET=your_session_secret
+   PORT=3002
+   DB_NAME=course_platform
+   DB_USER=root
+   DB_PASS=
+   DB_HOST=localhost
    ```
 
 4. Start the server:
@@ -50,4 +53,4 @@
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MD Akash Hossain License - see the file for details.
