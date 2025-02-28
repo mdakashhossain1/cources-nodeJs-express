@@ -1,0 +1,151 @@
+<div class="glass-morphism p-8" id="adminDashboard">
+    <h2 class="text-3xl font-bold text-white mb-6">Admin Dashboard</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="glass-morphism p-6">
+            <h3 class="text-xl font-bold text-white mb-4">Course Management</h3>
+            <a href="/admin/courses" 
+                class="bg-white text-purple-600 px-4 py-2 rounded hover:bg-purple-100 transition duration-300">
+                Add New Course
+            </a>
+        </div>
+
+        <div class="glass-morphism p-6">
+            <h3 class="text-xl font-bold text-white mb-4">User Management</h3>
+            <a href="/admin/users" 
+                class="bg-white text-purple-600 px-4 py-2 rounded hover:bg-purple-100 transition duration-300">
+                Manage Users
+            </a>
+        </div>
+    </div>
+
+    <!-- Existing Courses Section -->
+    <div class="glass-morphism p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-white">Existing Courses</h3>
+            <input type="text" 
+                   id="searchCourse" 
+                   placeholder="Search courses..." 
+                   class="px-4 py-2 rounded bg-white/10 border border-white/20 text-white placeholder-white/50">
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-white">
+                <thead class="bg-white/10">
+                    <tr>
+                        <th class="p-3 text-left">Title</th>
+                        <th class="p-3 text-left">Instructor</th>
+                        <th class="p-3 text-left">Price</th>
+                        <th class="p-3 text-left">Duration</th>
+                        <th class="p-3 text-left">Level</th>
+                        <th class="p-3 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="coursesList">
+                    <% if (courses && courses.length > 0) { %>
+                        <% courses.forEach(course => { %>
+                            <tr class="border-b border-white/10 hover:bg-white/5" data-course-id="<%= course.id %>">
+                                <td class="p-3"><%= course.title %></td>
+                                <td class="p-3"><%= course.instructor %></td>
+                                <td class="p-3">$<%= course.price %></td>
+                                <td class="p-3"><%= course.duration %></td>
+                                <td class="p-3">
+                                    <span class="px-2 py-1 rounded-full text-sm
+                                        <%= course.level === 'beginner' ? 'bg-green-500' : 
+                                           course.level === 'intermediate' ? 'bg-yellow-500' : 'bg-red-500' %>">
+                                        <%= course.level %>
+                                    </span>
+                                </td>
+                                <td class="p-3">
+                                    <div class="flex gap-2">
+                                        <a href="/courses/<%= course.id %>" 
+                                           class="bg-white text-purple-600 px-3 py-1 rounded hover:bg-purple-100 transition duration-300">
+                                            View
+                                        </a>
+                                        <button onclick="deleteCourse(<%= course.id %>)"
+                                                class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-300">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="6" class="p-3 text-center text-white/70">
+                                No courses available.
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// Delete course functionality
+async function deleteCourse(courseId) {
+    if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/courses/delete/${courseId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            const courseRow = document.querySelector(`tr[data-course-id="${courseId}"]`);
+            if (courseRow) {
+                courseRow.remove();
+            }
+            alert('Course deleted successfully');
+            
+            // Check if there are no more courses
+            const remainingCourses = document.querySelectorAll('#coursesList tr[data-course-id]');
+            if (remainingCourses.length === 0) {
+                const tbody = document.querySelector('#coursesList');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-3 text-center text-white/70">
+                            No courses available.
+                        </td>
+                    </tr>
+                `;
+            }
+        } else {
+            throw new Error(data.message || 'Failed to delete course');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error deleting course: ' + error.message);
+    }
+}
+
+// Search functionality
+document.getElementById('searchCourse').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#coursesList tr[data-course-id]');
+    
+    rows.forEach(row => {
+        const title = row.querySelector('td:first-child').textContent.toLowerCase();
+        const instructor = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const level = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+        
+        if (title.includes(searchTerm) || 
+            instructor.includes(searchTerm) || 
+            level.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script> 

@@ -1,0 +1,119 @@
+<div class="container mx-auto px-4 py-8">
+    <div class="glass-morphism p-8">
+        <h2 class="text-3xl font-bold text-white mb-6">User Management</h2>
+        
+        <!-- Search and Filter Section -->
+        <div class="mb-6">
+            <div class="flex gap-4">
+                <input type="text" 
+                       id="searchUser" 
+                       placeholder="Search users..." 
+                       class="flex-1 p-2 rounded bg-white/10 border border-white/20 text-white placeholder-white/50">
+                <select id="roleFilter" class="p-2 rounded bg-white/10 border border-white/20 text-white">
+                    <option value="">All Roles</option>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-white">
+                <thead class="bg-white/10">
+                    <tr>
+                        <th class="p-3 text-left">ID</th>
+                        <th class="p-3 text-left">Username</th>
+                        <th class="p-3 text-left">Email</th>
+                        <th class="p-3 text-left">Role</th>
+                        <th class="p-3 text-left">Created At</th>
+                        <th class="p-3 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(user => { %>
+                        <tr class="border-b border-white/10 hover:bg-white/5">
+                            <td class="p-3"><%= user.id %></td>
+                            <td class="p-3"><%= user.username %></td>
+                            <td class="p-3"><%= user.email %></td>
+                            <td class="p-3">
+                                <span class="px-2 py-1 rounded-full text-sm
+                                    <%= user.role === 'admin' ? 'bg-purple-500' : 'bg-blue-500' %>">
+                                    <%= user.role %>
+                                </span>
+                            </td>
+                            <td class="p-3"><%= new Date(user.createdAt).toLocaleDateString() %></td>
+                            <td class="p-3">
+                                <% if (user.role !== 'admin') { %>
+                                    <button 
+                                        onclick="deleteUser(<%= user.id %>)"
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition duration-300">
+                                        Delete
+                                    </button>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchUser');
+    const roleFilter = document.getElementById('roleFilter');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    // Search and filter functionality
+    function filterUsers() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const roleValue = roleFilter.value.toLowerCase();
+
+        tableRows.forEach(row => {
+            const username = row.children[1].textContent.toLowerCase();
+            const email = row.children[2].textContent.toLowerCase();
+            const role = row.children[3].textContent.trim().toLowerCase();
+
+            const matchesSearch = username.includes(searchTerm) || 
+                                email.includes(searchTerm);
+            const matchesRole = !roleValue || role === roleValue;
+
+            row.style.display = matchesSearch && matchesRole ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterUsers);
+    roleFilter.addEventListener('change', filterUsers);
+
+    // Delete user functionality
+    window.deleteUser = async (userId) => {
+        if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                // Remove the row from the table
+                const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+                if (row) row.remove();
+                alert('User deleted successfully');
+                location.reload(); // Refresh the page to update the table
+            } else {
+                const data = await response.json();
+                throw new Error(data.message || 'Failed to delete user');
+            }
+        } catch (error) {
+            alert('Error deleting user: ' + error.message);
+        }
+    };
+});
+</script> 
